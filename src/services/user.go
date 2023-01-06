@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -14,6 +15,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type UserService struct {
+}
+
+func InitUserService() *UserService {
+	return &UserService{}
+}
+
 func hashPassword(password string) (string, error) {
 	salt, _ := strconv.Atoi(config.GetEnv("JWT_SALT", "10"))
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), salt)
@@ -25,7 +33,35 @@ func checkPasswordHash(password, hash string) bool {
 	return err == nil
 }
 
-func RegisterUser(u *model.User) (int, error) {
+func craftToken(username string, id int) (*entity.Token, error) {
+	duration, _ := strconv.Atoi(config.GetEnv("JWT_DURATION", "24"))
+
+	expiration := time.Now().UTC().Add(time.Hour * time.Duration(duration))
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
+		ExpiresAt: jwt.NewNumericDate(expiration),
+		IssuedAt:  jwt.NewNumericDate(time.Now()),
+		NotBefore: jwt.NewNumericDate(time.Now()),
+		Issuer:    username,
+		ID:        fmt.Sprint(id),
+	})
+
+	tokenString, err := token.SignedString([]byte(config.GetEnv("JWT_SECRET", "secret")))
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &entity.Token{
+		Jwt:      tokenString,
+		MaxAge:   int((time.Hour / time.Second) * time.Duration(duration)),
+		Domain:   config.GetEnv("CORS_DOMAIN", "localhost"),
+		Secure:   false,
+		HttpOnly: true,
+	}, nil
+}
+
+func (us UserService) Register(u *model.User) (int, error) {
 	DB := db.InitDB()
 
 	u.Password, _ = hashPassword(u.Password)
@@ -38,7 +74,7 @@ func RegisterUser(u *model.User) (int, error) {
 	return http.StatusOK, nil
 }
 
-func LoginUser(u *model.UserLogin) (int, *entity.Token, error) {
+func (us UserService) Login(u *model.UserLogin) (int, *entity.Token, error) {
 	DB := db.InitDB()
 	var user model.User
 
@@ -52,35 +88,11 @@ func LoginUser(u *model.UserLogin) (int, *entity.Token, error) {
 		return http.StatusBadRequest, nil, errors.New("incorrect username or password")
 	}
 
-	baseUser := &model.UserBase{
-		Id:        user.Id,
-		Username:  user.Username,
-		Email:     user.Email,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		DoB:       user.DoB,
-		Phone:     user.Phone,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
+	token, err := craftToken(user.Username, user.Id)
+
+	if err != nil {
+		return http.StatusInternalServerError, nil, err
 	}
 
-	duration, _ := strconv.Atoi(config.GetEnv("JWT_DURATION", "24"))
-
-	expiration := time.Now().UTC().Add(time.Hour * time.Duration(duration))
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"data": baseUser,
-		"iat":  time.Now().UTC(),
-		"exp":  expiration,
-	})
-
-	tokenString, err := token.SignedString(config.GetEnv("JWT_SECRET", "secret"))
-
-	return http.StatusOK, &entity.Token{
-		Jwt:      tokenString,
-		MaxAge:   int((time.Hour / time.Second) * time.Duration(duration)),
-		Domain:   config.GetEnv("JWT_DOMAIN", "localhost"),
-		Secure:   false,
-		HttpOnly: true,
-	}, err
+	return http.StatusOK, token, nil
 }

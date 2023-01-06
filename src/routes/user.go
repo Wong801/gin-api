@@ -6,8 +6,9 @@ import (
 )
 
 func (r handler) addUsers(rg *gin.RouterGroup) {
-	users := rg.Group("/user")
+	userRoute := rg.Group("/user")
+	userController := controller.InitUserController()
 
-	users.POST("/register", controller.UserRegister())
-	users.POST("/login", controller.UserLogin())
+	userRoute.POST("/register", userController.Register())
+	userRoute.POST("/login", userController.Login())
 }

@@ -9,7 +9,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func UserRegister() gin.HandlerFunc {
+type UserController struct {
+	s service.UserService
+}
+
+func InitUserController() *UserController {
+	us := &UserController{
+		s: *service.InitUserService(),
+	}
+	return us
+}
+
+func (uc UserController) Register() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var body model.User
 		if err := c.ShouldBindJSON(&body); err != nil {
@@ -17,7 +28,7 @@ func UserRegister() gin.HandlerFunc {
 			c.Set("error", api.MakeRequestError(err))
 			return
 		}
-		status, err := service.RegisterUser(&body)
+		status, err := uc.s.Register(&body)
 		c.Set("status", status)
 		if err != nil {
 			c.Set("error", api.MakeResultError(err))
@@ -30,7 +41,7 @@ func UserRegister() gin.HandlerFunc {
 	}
 }
 
-func UserLogin() gin.HandlerFunc {
+func (uc UserController) Login() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var body model.UserLogin
 		if err := c.ShouldBindJSON(&body); err != nil {
@@ -38,7 +49,7 @@ func UserLogin() gin.HandlerFunc {
 			c.Set("error", api.MakeRequestError(err))
 			return
 		}
-		status, token, err := service.LoginUser(&body)
+		status, token, err := uc.s.Login(&body)
 		c.Set("status", status)
 		if err != nil {
 			c.Set("error", api.MakeResultError(err))
