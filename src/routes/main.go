@@ -8,44 +8,35 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type route struct {
+type handler struct {
 	router *gin.Engine
 }
 
-func InitRoutes() route {
-	r := route{
+func InitRoutes() handler {
+	r := handler{
 		router: gin.New(),
 	}
+	m := middleware.InitMiddleware()
 
-	r.router.Use(gin.Logger(), middleware.Recovery())
+	r.router.Use(gin.Logger(), m.Recovery(), m.Response())
 
 	v1 := r.router.Group("/api/v1")
 
 	r.addUsers(v1)
 
-	r.router.Use(middleware.Response())
-
 	return r
 }
 
-func (r route) Run(addr string) error {
+func (r handler) Run(addr string) error {
 	r.router.NoRoute(func(c *gin.Context) {
-		c.JSON(http.StatusNotFound, &entity.HttpResponse{
-			Success: false,
-			Data: map[string]string{
-				"message": "Not Found",
-			},
-		})
+		c.Set("status", http.StatusNotFound)
+		c.Set("error", entity.ResultError{Reason: "Not Found"})
+		c.Next()
 	})
-
 	r.router.NoMethod(func(c *gin.Context) {
-		c.JSON(http.StatusMethodNotAllowed, &entity.HttpResponse{
-			Success: false,
-			Data: map[string]string{
-				"message": "Method Not Allowed",
-			},
-		})
+		c.Set("status", http.StatusMethodNotAllowed)
+		c.Set("error", entity.ResultError{Reason: "Method Not Allowed"})
+		c.Next()
 	})
-
 	return r.router.Run(addr)
 }
