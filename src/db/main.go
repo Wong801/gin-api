@@ -1,42 +1,57 @@
 package db
 
 import (
+	"database/sql"
+	"fmt"
 	"log"
 
 	"github.com/Wong801/gin-api/src/config"
 	model "github.com/Wong801/gin-api/src/models"
+	_ "github.com/lib/pq"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-type handler struct {
+type Adapter struct {
 	Database *gorm.DB
+	Postgres *sql.DB
 }
 
-func InitDB() handler {
-	var db handler
+func Open(h *Adapter) error {
 	var err error
 	config := config.GetDB()
+	dbURL := fmt.Sprintf("postgres://%s:%s@%s%s/%s?sslmode=%s", config.User, config.Pass, config.Host, config.Port, config.DB, config.SSL)
 
-	dbURL := "postgres://" + config.User + ":" + config.Pass + "@" + config.Host + config.Port + "/" + config.DB
+	h.Database, err = gorm.Open(postgres.Open(dbURL), &gorm.Config{})
 
-	db.Database, err = gorm.Open(postgres.Open(dbURL), &gorm.Config{})
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
+func InitDB() *Adapter {
+	var db Adapter
+
+	err := Open(&db)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	return db
+	db.Postgres, err = db.Database.DB()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	return &db
 }
 
-func (h handler) Close() error {
-	postgresDB, _ := h.Database.DB()
-	return postgresDB.Close()
+func (h Adapter) Close() error {
+	return h.Postgres.Close()
 }
 
-func (h handler) MigrateModels() bool {
+func (h Adapter) MigrateModels() error {
 	h.Database.AutoMigrate(&model.User{})
 
-	h.Close()
-	return true
+	return h.Postgres.Close()
 }

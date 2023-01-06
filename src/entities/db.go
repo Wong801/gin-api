@@ -6,4 +6,5 @@ type DBConnection struct {
 	Port string //example: :5347
 	Host string
 	DB   string
+	SSL  string
 }
