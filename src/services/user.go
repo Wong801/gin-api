@@ -17,6 +17,16 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type UserService struct {
+	db *db.Adapter
+}
+
+func InitUserService() *UserService {
+	return &UserService{
+		db: db.InitDB(),
+	}
+}
+
 func hashPassword(password string) (string, error) {
 	salt, _ := strconv.Atoi(config.GetEnv("JWT_SALT", "10"))
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), salt)
@@ -57,44 +67,44 @@ func craftToken(username string, id int) (*entity.Token, error) {
 }
 
 func (us UserService) GetUser(u *model.UserLogin) (int, *model.UserBase, error) {
-	DB := db.InitDB()
 	var user model.UserBase
+	db.Open(us.db)
 
-	if err := DB.Database.First(&user, "email = ?", u.Email).Or("username = ?", u.Username).Error; err != nil {
+	if err := us.db.Database.First(&user, "email = ?", u.Email).Or("username = ?", u.Username).Error; err != nil {
 		return http.StatusNotFound, nil, err
 	}
 
-	DB.Close()
+	us.db.Close()
 
 	return http.StatusFound, &user, nil
 }
 
 func (us UserService) Register(u *model.User) (int, error) {
-	DB := db.InitDB()
 	u.Password, _ = hashPassword(u.Password)
+	db.Open(us.db)
 
-	if err := DB.Database.Create(&u).Error; err != nil {
+	if err := us.db.Database.Create(&u).Error; err != nil {
 		var perr *pgconn.PgError
-		if ok := errors.As(err, &perr); ok && perr.Code == "23505" {
+		if ok := errors.As(err, &perr); ok {
 			columnName := strings.Split(perr.ConstraintName, "_")
 			return http.StatusConflict, errors.New(columnName[len(columnName)-1] + " is already used")
 		}
 		return http.StatusInternalServerError, err
 	}
 
-	DB.Close()
+	us.db.Close()
 	return http.StatusCreated, nil
 }
 
 func (us UserService) Login(u *model.UserLogin) (int, *entity.Token, error) {
-	DB := db.InitDB()
 	var user model.User
+	db.Open(us.db)
 
-	if err := DB.Database.First(&user, "email = ? OR username = ?", u.Email, u.Username).Error; err != nil {
+	if err := us.db.Database.First(&user, "email = ? OR username = ?", u.Email, u.Username).Error; err != nil {
 		return http.StatusNotFound, nil, errors.New("user not found")
 	}
 
-	DB.Close()
+	us.db.Close()
 
 	correctPassword := checkPasswordHash(u.Password, user.Password)
 
@@ -116,10 +126,10 @@ func (us UserService) ChangePassword(id int, u *model.UserChangePassword) (int, 
 		return http.StatusBadRequest, errors.New("old password doesn't verified")
 	}
 
-	DB := db.InitDB()
 	var user model.User
+	db.Open(us.db)
 
-	DB.Database.Where("id = ?", id).First(&user)
+	us.db.Database.Where("id = ?", id).First(&user)
 	correctPassword := checkPasswordHash(u.OldPassword, user.Password)
 
 	if !correctPassword {
@@ -128,8 +138,8 @@ func (us UserService) ChangePassword(id int, u *model.UserChangePassword) (int, 
 
 	user.Password, _ = hashPassword(u.NewPassword)
 
-	DB.Database.Save(&user)
-	DB.Close()
+	us.db.Database.Save(&user)
+	us.db.Close()
 
 	return http.StatusOK, nil
 }

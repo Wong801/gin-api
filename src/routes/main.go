@@ -20,8 +20,10 @@ func InitRoutes() handler {
 
 	r.router.Use(gin.Logger(), m.Recovery(), m.Response())
 
+	root := r.router.Group("/")
 	v1 := r.router.Group("/api/v1")
 
+	r.addRoot(root)
 	r.addUsers(v1)
 
 	return r

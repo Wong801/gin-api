@@ -5,13 +5,25 @@ import (
 
 	"github.com/Wong801/gin-api/src/api"
 	model "github.com/Wong801/gin-api/src/models"
+	service "github.com/Wong801/gin-api/src/services"
 	"github.com/gin-gonic/gin"
 )
+
+type UserController struct {
+	s service.UserService
+}
+
+func InitUserController() *UserController {
+	uc := &UserController{
+		s: *service.InitUserService(),
+	}
+	return uc
+}
 
 func (uc UserController) Register() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var body model.User
-		if err := c.ShouldBindJSON(&body); err != nil {
+		if err := c.ShouldBind(&body); err != nil {
 			c.Set("status", http.StatusBadRequest)
 			c.Set("error", api.MakeRequestError(err))
 			return
@@ -32,7 +44,7 @@ func (uc UserController) Register() gin.HandlerFunc {
 func (uc UserController) Login() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var body model.UserLogin
-		if err := c.ShouldBindJSON(&body); err != nil {
+		if err := c.ShouldBind(&body); err != nil {
 			c.Set("status", http.StatusBadRequest)
 			c.Set("error", api.MakeRequestError(err))
 			return
@@ -54,7 +66,7 @@ func (uc UserController) Login() gin.HandlerFunc {
 func (uc UserController) ChangePassword() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var body model.UserChangePassword
-		if err := c.ShouldBindJSON(&body); err != nil {
+		if err := c.ShouldBind(&body); err != nil {
 			c.Set("status", http.StatusBadRequest)
 			c.Set("error", api.MakeRequestError(err))
 			return

@@ -11,6 +11,7 @@ func GetDB() *entity.DBConnection {
 	dbConfig.DB = GetEnv("POSTGRES_DB", "postgres")
 	dbConfig.Host = GetEnv("POSTGRES_HOST", "127.0.0.1")
 	dbConfig.Port = GetEnv("POSTGRES_PORT", ":5432")
+	dbConfig.SSL = GetEnv("POSTGRES_PORT", "disable")
 
 	return &dbConfig
 }
