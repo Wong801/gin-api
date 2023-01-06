@@ -16,8 +16,9 @@ func InitRoutes() handler {
 	r := handler{
 		router: gin.New(),
 	}
+	m := middleware.InitMiddleware()
 
-	r.router.Use(gin.Logger(), middleware.Recovery(), middleware.Response())
+	r.router.Use(gin.Logger(), m.Recovery(), m.Response())
 
 	v1 := r.router.Group("/api/v1")
 

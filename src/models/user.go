@@ -18,11 +18,17 @@ type UserBase struct {
 
 type User struct {
 	UserBase
-	Password string `json:"password" binding:"required"`
+	Password string `json:"password" binding:"required,min=8"`
 }
 
 type UserLogin struct {
 	Username string `json:"username" binding:"required_without=Email,omitempty"`
 	Email    string `json:"email" binding:"required_without=Username,omitempty,email"`
-	Password string `json:"password" binding:"required"`
+	Password string `json:"password" binding:"required,omitempty"`
+}
+
+type UserChangePassword struct {
+	OldPassword       string `json:"oldPassword" binding:"required"`
+	VerifyOldPassword string `json:"verifyOldPassword" binding:"required"`
+	NewPassword       string `json:"newPassword" binding:"required,min=8"`
 }
