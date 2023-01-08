@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Recovery() func(c *gin.Context) {
+func (m middleware) Recovery() func(c *gin.Context) {
 	return gin.CustomRecovery(func(c *gin.Context, err interface{}) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, &entity.HttpResponse{
 			Success: false,
