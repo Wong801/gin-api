@@ -1,7 +1,8 @@
-package api
+package service
 
 import (
 	"encoding/json"
+	"fmt"
 
 	entity "github.com/Wong801/gin-api/src/entities"
 	"github.com/go-playground/validator/v10"
@@ -20,16 +21,13 @@ func makeTypeError(typeErr *json.UnmarshalTypeError, errs []entity.ValidationErr
 }
 
 func makeValidationError(validationErrs validator.ValidationErrors, errs []entity.ValidationError) []entity.ValidationError {
+
 	for _, f := range validationErrs {
-		err := f.Tag()
-		switch err {
-		case "required":
-			errs = append(errs, entity.ValidationError{Field: f.Field(), Reason: err})
-		case "required_without":
-			errs = append(errs, entity.ValidationError{Field: f.Field(), Reason: "required if " + f.Param() + " not supplied"})
-		default:
-			errs = append(errs, entity.ValidationError{Field: f.Field(), Reason: "value must be in " + err + " format"})
+		err := f.ActualTag()
+		if f.Param() != "" {
+			err = fmt.Sprintf("%s=%s", err, f.Param())
 		}
+		errs = append(errs, entity.ValidationError{Field: f.Field(), Reason: err})
 	}
 	return errs
 }
@@ -42,12 +40,8 @@ func MakeRequestError(err error) []entity.ValidationError {
 	case validator.ValidationErrors:
 		return makeValidationError(err.(validator.ValidationErrors), errs)
 	default:
-		errs = append(errs, entity.ValidationError{Reason: err.Error()})
+		errs = append(errs, entity.ValidationError{Reason: "Unknown Error"})
 	}
 
 	return errs
-}
-
-func MakeResultError(err error) entity.ResultError {
-	return entity.ResultError{Reason: err.Error()}
 }

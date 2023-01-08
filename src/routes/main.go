@@ -8,39 +8,44 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type handler struct {
+type route struct {
 	router *gin.Engine
 }
 
-func InitRoutes() handler {
-	r := handler{
+func InitRoutes() route {
+	r := route{
 		router: gin.New(),
 	}
-	m := middleware.InitMiddleware()
 
-	r.router.StaticFS("/public", gin.Dir("public", false))
-	r.router.Use(gin.Logger(), m.Recovery(), m.Response())
+	r.router.Use(gin.Logger(), middleware.Recovery())
 
-	root := r.router.Group("/")
 	v1 := r.router.Group("/api/v1")
 
-	r.addRoot(root)
 	r.addUsers(v1)
-	r.addCompanies(v1)
+
+	r.router.Use(middleware.Response())
 
 	return r
 }
 
-func (r handler) Run(addr string) error {
+func (r route) Run(addr string) error {
 	r.router.NoRoute(func(c *gin.Context) {
-		c.Set("status", http.StatusNotFound)
-		c.Set("error", entity.ResultError{Reason: "Not Found"})
-		c.Next()
+		c.JSON(http.StatusNotFound, &entity.HttpResponse{
+			Success: false,
+			Data: map[string]string{
+				"message": "Not Found",
+			},
+		})
 	})
+
 	r.router.NoMethod(func(c *gin.Context) {
-		c.Set("status", http.StatusMethodNotAllowed)
-		c.Set("error", entity.ResultError{Reason: "Method Not Allowed"})
-		c.Next()
+		c.JSON(http.StatusMethodNotAllowed, &entity.HttpResponse{
+			Success: false,
+			Data: map[string]string{
+				"message": "Method Not Allowed",
+			},
+		})
 	})
+
 	return r.router.Run(addr)
 }

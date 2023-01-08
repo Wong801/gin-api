@@ -24,21 +24,22 @@ func getSuccessStatus(status any) int {
 func getErrorMessage(c *gin.Context) any {
 	err := c.Errors.Last()
 	if err != nil {
-		return entity.ResultError{Reason: c.Error(err).Error()}
+		return c.Error(err).Error()
 	}
 	customError, _ := c.Get("error")
 	return customError
 }
 
-func (m middleware) Response() gin.HandlerFunc {
+func Response() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Next()
 		err := getErrorMessage(c)
 		status, _ := c.Get("status")
 		if err != nil {
 			c.AbortWithStatusJSON(getErrorStatus(status), &entity.HttpResponse{
 				Success: false,
-				Data:    err,
+				Data: gin.H{
+					"message": err,
+				},
 			})
 			return
 		}
