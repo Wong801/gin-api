@@ -18,6 +18,7 @@ func InitRoutes() handler {
 	}
 	m := middleware.InitMiddleware()
 
+	r.router.StaticFS("/public", gin.Dir("public", false))
 	r.router.Use(gin.Logger(), m.Recovery(), m.Response())
 
 	root := r.router.Group("/")
@@ -25,6 +26,7 @@ func InitRoutes() handler {
 
 	r.addRoot(root)
 	r.addUsers(v1)
+	r.addCompanies(v1)
 
 	return r
 }

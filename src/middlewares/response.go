@@ -30,10 +30,9 @@ func getErrorMessage(c *gin.Context) any {
 	return customError
 }
 
-func (m Middleware) Response() gin.HandlerFunc {
+func (m middleware) Response() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
-
 		err := getErrorMessage(c)
 		status, _ := c.Get("status")
 		if err != nil {

@@ -1,8 +1,8 @@
 package middleware
 
-type Middleware struct {
+type middleware struct {
 }
 
-func InitMiddleware() *Middleware {
-	return &Middleware{}
+func InitMiddleware() *middleware {
+	return &middleware{}
 }

@@ -61,7 +61,7 @@ func craftToken(username string, id int) (*entity.Token, error) {
 		Jwt:      tokenString,
 		MaxAge:   int((time.Hour / time.Second) * time.Duration(duration)),
 		Domain:   config.GetEnv("CORS_DOMAIN", "localhost"),
-		Secure:   false,
+		Secure:   true,
 		HttpOnly: true,
 	}, nil
 }
@@ -70,7 +70,7 @@ func (us UserService) GetUser(u *model.UserLogin) (int, *model.UserBase, error) 
 	var user model.UserBase
 	db.Open(us.db)
 
-	if err := us.db.Database.First(&user, "email = ?", u.Email).Or("username = ?", u.Username).Error; err != nil {
+	if err := us.db.Database.First(&user, "email = ? OR username = ?", u.Email, u.Username).Error; err != nil {
 		return http.StatusNotFound, nil, err
 	}
 
