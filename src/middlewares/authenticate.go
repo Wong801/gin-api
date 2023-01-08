@@ -9,7 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-func (m Middleware) Authenticate() func(c *gin.Context) {
+func (m middleware) Authenticate() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		tokenString, err := c.Cookie("jwt")
 

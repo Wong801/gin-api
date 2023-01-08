@@ -50,8 +50,7 @@ func (h Adapter) Close() error {
 	return h.Postgres.Close()
 }
 
-func (h Adapter) MigrateModels() error {
+func (h Adapter) MigrateModels() {
 	h.Database.AutoMigrate(&model.User{})
-
-	return h.Postgres.Close()
+	h.Database.AutoMigrate(&model.Company{})
 }

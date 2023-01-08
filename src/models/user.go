@@ -12,13 +12,12 @@ type UserBase struct {
 	Phone     string     `json:"phone" form:"phone" binding:"omitempty,e164"`
 	Email     string     `json:"email" form:"email" binding:"required,email" gorm:"uniqueIndex"`
 	DoB       *time.Time `json:"dob" form:"dob" binding:"required" time_format:"2006-01-02" gorm:"column:date_of_birth"`
-	CreatedAt time.Time  `json:"createdAt" form:"createdAt" gorm:"autoCreateTime:true"`
-	UpdatedAt time.Time  `json:"updatedAt" form:"updatedAt" gorm:"autoUpdateTime:true"`
 }
 
 type User struct {
 	UserBase
 	Password string `json:"password" form:"password" binding:"required,min=8"`
+	Timestamp
 }
 
 type UserLogin struct {
