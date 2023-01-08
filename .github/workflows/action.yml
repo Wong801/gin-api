@@ -7,8 +7,8 @@ on:
 jobs:
   push_to_registry:
     name: Push Docker image to Docker Hub
-    if: ${{ github.ref == 'ref/heads/dev' }}
     runs-on: ubuntu-latest
+    if: ${{ github.ref == 'ref/heads/dev' }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
