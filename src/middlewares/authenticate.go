@@ -16,6 +16,7 @@ func (m middleware) Authenticate() func(c *gin.Context) {
 		if err != nil {
 			c.Set("status", http.StatusUnauthorized)
 			c.Set("error", "Unauthorized")
+			c.Abort()
 			return
 		}
 
@@ -28,16 +29,19 @@ func (m middleware) Authenticate() func(c *gin.Context) {
 			if err == jwt.ErrSignatureInvalid {
 				c.Set("status", http.StatusUnauthorized)
 				c.Set("error", "Unauthorized")
+				c.Abort()
 				return
 			}
 			c.Set("status", http.StatusBadRequest)
 			c.Set("error", "Unauthorized")
+			c.Abort()
 			return
 		}
 
 		if !token.Valid {
 			c.Set("status", http.StatusUnauthorized)
 			c.Set("error", "Invalid Token")
+			c.Abort()
 			return
 		}
 		id, _ := strconv.Atoi(claims.ID)

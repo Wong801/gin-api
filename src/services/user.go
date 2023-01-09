@@ -56,12 +56,19 @@ func craftToken(username string, id int) (*entity.Token, error) {
 	if err != nil {
 		return nil, err
 	}
+	var secure bool
+
+	if config.GetEnv("GO_ENV", "development") == "production" {
+		secure = true
+	} else {
+		secure = false
+	}
 
 	return &entity.Token{
 		Jwt:      tokenString,
 		MaxAge:   int((time.Hour / time.Second) * time.Duration(duration)),
 		Domain:   config.GetEnv("CORS_DOMAIN", "localhost"),
-		Secure:   true,
+		Secure:   secure,
 		HttpOnly: true,
 	}, nil
 }

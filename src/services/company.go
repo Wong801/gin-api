@@ -3,6 +3,8 @@ package service
 import (
 	"errors"
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/Wong801/gin-api/src/db"
 	model "github.com/Wong801/gin-api/src/models"
@@ -86,6 +88,10 @@ func (cs CompanyService) Delete(id int) (int, *model.Company, error) {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return http.StatusNotFound, nil, errors.New("company data not found")
 		}
+		return http.StatusInternalServerError, nil, err
+	}
+
+	if err := os.Remove(strings.TrimPrefix(c.Logo, "/")); err != nil && !os.IsNotExist(err) {
 		return http.StatusInternalServerError, nil, err
 	}
 
