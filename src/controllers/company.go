@@ -55,6 +55,7 @@ func (cc CompanyController) Get() func(c *gin.Context) {
 		if err != nil {
 			c.Set("status", http.StatusBadRequest)
 			c.Set("error", err)
+			return
 		}
 
 		status, data, errService := cc.s.Get(cUri.Id)
@@ -77,6 +78,7 @@ func (cc CompanyController) Create() func(c *gin.Context) {
 		if err != nil {
 			c.Set("status", http.StatusBadRequest)
 			c.Set("error", err)
+			return
 		}
 		if logoPath, ok := c.Get("company_logo"); ok {
 			company.Logo = logoPath.(string)
@@ -104,6 +106,7 @@ func (cc CompanyController) Update() func(c *gin.Context) {
 		if err != nil {
 			c.Set("status", http.StatusBadRequest)
 			c.Set("error", err)
+			return
 		}
 		if logoPath, ok := c.Get("company_logo"); ok {
 			company.Logo = logoPath.(string)
@@ -129,6 +132,7 @@ func (cc CompanyController) Delete() func(c *gin.Context) {
 		if err != nil {
 			c.Set("status", http.StatusBadRequest)
 			c.Set("error", err)
+			return
 		}
 
 		status, data, errService := cc.s.Delete(cUri.Id)
