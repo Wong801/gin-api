@@ -85,14 +85,17 @@ func (cs CompanyService) Delete(id int) (int, *model.Company, error) {
 	db.Open(cs.db)
 
 	if err := cs.db.Database.Clauses(clause.Returning{}).Delete(&c, id).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return http.StatusNotFound, nil, errors.New("company data not found")
-		}
 		return http.StatusInternalServerError, nil, err
 	}
 
-	if err := os.Remove(strings.TrimPrefix(c.Logo, "/")); err != nil && !os.IsNotExist(err) {
-		return http.StatusInternalServerError, nil, err
+	if c.Id == 0 {
+		return http.StatusNotFound, nil, errors.New("company data not found")
+	}
+
+	if c.Logo != "" {
+		if err := os.Remove(strings.TrimPrefix(c.Logo, "/")); err != nil && !os.IsNotExist(err) {
+			return http.StatusInternalServerError, nil, err
+		}
 	}
 
 	return http.StatusOK, &c, nil
