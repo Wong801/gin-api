@@ -119,7 +119,7 @@ func (us UserService) Login(u *model.UserLogin) (int, *entity.Token, error) {
 		return http.StatusBadRequest, nil, errors.New("incorrect username or password")
 	}
 
-	token, err := craftToken(user.Username, user.Id)
+	token, err := craftToken(user.Username, user.ID)
 
 	if err != nil {
 		return http.StatusInternalServerError, nil, err
