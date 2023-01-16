@@ -9,34 +9,23 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type companyQuery struct {
-	Name string `json:"name" form:"name"`
-}
-
-type companyUri struct {
+type skillUri struct {
 	Id int `uri:"id" binding:"required"`
 }
 
-type CompanyController struct {
-	s service.CompanyService
+type SkillController struct {
+	s service.CRUDService
 }
 
-func InitCompanyController() *CompanyController {
-	return &CompanyController{
-		s: *service.InitCompanyService(),
+func InitSkillController() *SkillController {
+	return &SkillController{
+		s: *service.InitCRUDService("skill", model.Skill{}),
 	}
 }
 
-func (cc CompanyController) Search() func(c *gin.Context) {
+func (cc SkillController) Search() func(c *gin.Context) {
 	return func(c *gin.Context) {
-		var cQuery companyQuery
-
-		err := c.ShouldBind(&cQuery)
-		if err != nil {
-			cQuery.Name = ""
-		}
-
-		status, list, errService := cc.s.Search(cQuery.Name)
+		status, list, errService := cc.s.Search([]model.Skill{})
 		c.Set("status", status)
 		if errService != nil {
 			c.Set("error", api.MakeResultError(errService))
@@ -48,9 +37,9 @@ func (cc CompanyController) Search() func(c *gin.Context) {
 	}
 }
 
-func (cc CompanyController) Get() func(c *gin.Context) {
+func (cc SkillController) Get() func(c *gin.Context) {
 	return func(c *gin.Context) {
-		var cUri companyUri
+		var cUri skillUri
 
 		err := c.ShouldBindUri(&cUri)
 		if err != nil {
@@ -71,21 +60,17 @@ func (cc CompanyController) Get() func(c *gin.Context) {
 	}
 }
 
-func (cc CompanyController) Create() func(c *gin.Context) {
+func (cc SkillController) Create() func(c *gin.Context) {
 	return func(c *gin.Context) {
-		var company model.Company
+		var skill model.Skill
 
-		err := c.ShouldBind(&company)
+		err := c.ShouldBind(&skill)
 		if err != nil {
 			c.Set("status", http.StatusBadRequest)
 			c.Set("error", api.MakeRequestError(err))
 			return
 		}
-		if logoPath, ok := c.Get("company_logo"); ok {
-			company.Logo = logoPath.(string)
-		}
-
-		status, data, errService := cc.s.Create(company)
+		status, data, errService := cc.s.Create(skill)
 		c.Set("status", status)
 		if errService != nil {
 			c.Set("error", api.MakeResultError(errService))
@@ -97,23 +82,20 @@ func (cc CompanyController) Create() func(c *gin.Context) {
 	}
 }
 
-func (cc CompanyController) Update() func(c *gin.Context) {
+func (cc SkillController) Update() func(c *gin.Context) {
 	return func(c *gin.Context) {
-		var cUri companyUri
-		var company model.Company
+		var cUri skillUri
+		var skill model.Skill
 
 		c.ShouldBindUri(&cUri)
-		err := c.ShouldBind(&company)
+		err := c.ShouldBind(&skill)
 		if err != nil {
 			c.Set("status", http.StatusBadRequest)
-			c.Set("error", api.MakeRequestError(err))
+			c.Set("error", err)
 			return
 		}
-		if logoPath, ok := c.Get("company_logo"); ok {
-			company.Logo = logoPath.(string)
-		}
 
-		status, data, errService := cc.s.Update(cUri.Id, company)
+		status, data, errService := cc.s.Update(cUri.Id, skill)
 		c.Set("status", status)
 		if errService != nil {
 			c.Set("error", api.MakeResultError(errService))
@@ -125,9 +107,9 @@ func (cc CompanyController) Update() func(c *gin.Context) {
 	}
 }
 
-func (cc CompanyController) Delete() func(c *gin.Context) {
+func (cc SkillController) Delete() func(c *gin.Context) {
 	return func(c *gin.Context) {
-		var cUri companyUri
+		var cUri skillUri
 
 		err := c.ShouldBindUri(&cUri)
 		if err != nil {

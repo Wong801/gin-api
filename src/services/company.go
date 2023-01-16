@@ -24,7 +24,7 @@ func InitCompanyService() *CompanyService {
 
 func (cs CompanyService) Get(id int) (int, *model.Company, error) {
 	c := &model.Company{
-		Id: id,
+		ID: id,
 	}
 	db.Open(cs.db)
 
@@ -70,7 +70,7 @@ func (cs CompanyService) Create(c model.Company) (int, *model.Company, error) {
 }
 
 func (cs CompanyService) Update(id int, c model.Company) (int, *model.Company, error) {
-	c.Id = id
+	c.ID = id
 	db.Open(cs.db)
 
 	if err := cs.db.Database.Save(&c).Error; err != nil {
@@ -88,7 +88,7 @@ func (cs CompanyService) Delete(id int) (int, *model.Company, error) {
 		return http.StatusInternalServerError, nil, err
 	}
 
-	if c.Id == 0 {
+	if c.ID == 0 {
 		return http.StatusNotFound, nil, errors.New("company data not found")
 	}
 
