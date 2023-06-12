@@ -18,12 +18,12 @@ import (
 )
 
 type UserService struct {
-	db *db.Adapter
+	DB *db.Adapter
 }
 
 func InitUserService() *UserService {
 	return &UserService{
-		db: db.InitDB(),
+		DB: db.InitDB(),
 	}
 }
 
@@ -66,24 +66,34 @@ func craftToken(username string, id int) (*entity.Token, error) {
 	}, nil
 }
 
-func (us UserService) GetUser(u *model.UserLogin) (int, *model.UserBase, error) {
-	var user model.UserBase
-	db.Open(us.db)
+func (us UserService) GetUser() (int, *model.UserBase, error) {
+	var user model.User
+	db.Open(us.DB)
 
-	if err := us.db.Database.First(&user, "email = ? OR username = ?", u.Email, u.Username).Error; err != nil {
+	if err := us.DB.Database.First(&user).Error; err != nil {
 		return http.StatusNotFound, nil, err
 	}
 
-	us.db.Close()
+	return http.StatusFound, user.GetBase(), nil
+}
 
-	return http.StatusFound, &user, nil
+func (us UserService) UpdateUser(id int, u *model.UserBase) (int, *model.UserBase, error) {
+	var user model.User
+	db.Open(us.DB)
+
+	us.DB.Database.Where("id = ?", id)
+
+	if err := us.DB.Database.Save(&user).Error; err != nil {
+		return http.StatusInternalServerError, nil, err
+	}
+	return http.StatusOK, user.GetBase(), nil
 }
 
 func (us UserService) Register(u *model.User) (int, error) {
 	u.Password, _ = hashPassword(u.Password)
-	db.Open(us.db)
+	db.Open(us.DB)
 
-	if err := us.db.Database.Create(&u).Error; err != nil {
+	if err := us.DB.Database.Create(&u).Error; err != nil {
 		var perr *pgconn.PgError
 		if ok := errors.As(err, &perr); ok {
 			columnName := strings.Split(perr.ConstraintName, "_")
@@ -91,20 +101,16 @@ func (us UserService) Register(u *model.User) (int, error) {
 		}
 		return http.StatusInternalServerError, err
 	}
-
-	us.db.Close()
 	return http.StatusCreated, nil
 }
 
 func (us UserService) Login(u *model.UserLogin) (int, *entity.Token, error) {
 	var user model.User
-	db.Open(us.db)
+	db.Open(us.DB)
 
-	if err := us.db.Database.First(&user, "email = ? OR username = ?", u.Email, u.Username).Error; err != nil {
+	if err := us.DB.Database.First(&user, "email = ? OR username = ?", u.Email, u.Username).Error; err != nil {
 		return http.StatusNotFound, nil, errors.New("user not found")
 	}
-
-	us.db.Close()
 
 	correctPassword := checkPasswordHash(u.Password, user.Password)
 
@@ -127,9 +133,9 @@ func (us UserService) ChangePassword(id int, u *model.UserChangePassword) (int, 
 	}
 
 	var user model.User
-	db.Open(us.db)
+	db.Open(us.DB)
 
-	us.db.Database.Where("id = ?", id).First(&user)
+	us.DB.Database.Where("id = ?", id).First(&user)
 	correctPassword := checkPasswordHash(u.OldPassword, user.Password)
 
 	if !correctPassword {
@@ -138,8 +144,7 @@ func (us UserService) ChangePassword(id int, u *model.UserChangePassword) (int, 
 
 	user.Password, _ = hashPassword(u.NewPassword)
 
-	us.db.Database.Save(&user)
-	us.db.Close()
+	us.DB.Database.Save(&user)
 
 	return http.StatusOK, nil
 }

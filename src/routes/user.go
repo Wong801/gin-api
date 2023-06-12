@@ -11,10 +11,13 @@ func (r handler) addUsers(rg *gin.RouterGroup) {
 	userController := controller.InitUserController()
 	m := middleware.InitMiddleware()
 
+	userRoute.GET("/profile", userController.GetProfile())
 	userRoute.POST("/register", userController.Register())
 	userRoute.POST("/login", userController.Login())
 
 	userRoute.Use(m.Authenticate())
 
+	userRoute.POST("/logout", userController.Logout())
+	userRoute.PUT("/profile", userController.UpdateProfile())
 	userRoute.PATCH("/change-password", userController.ChangePassword())
 }
