@@ -17,6 +17,7 @@ func (r handler) addUsers(rg *gin.RouterGroup) {
 
 	userRoute.Use(m.Authenticate())
 
+	userRoute.POST("/check-login", userController.CheckLogin())
 	userRoute.POST("/logout", userController.Logout())
 	userRoute.PUT("/profile", userController.UpdateProfile())
 	userRoute.PATCH("/change-password", userController.ChangePassword())

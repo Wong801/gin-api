@@ -1,7 +1,6 @@
 package route
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/Wong801/gin-api/src/config"
@@ -28,8 +27,10 @@ func InitRoutes() handler {
 	r.router.Use(csrf.Middleware(csrf.Options{
 		Secret: config.GetEnv("CSRF_SECRET", "secret"),
 		ErrorFunc: func(c *gin.Context) {
-			c.Set("status", http.StatusBadRequest)
-			c.Set("error", errors.New("CSRF token mismatch"))
+			c.AbortWithStatusJSON(http.StatusBadRequest, &entity.HttpResponse{
+				Success: false,
+				Data:    "CSRF token mismatch",
+			})
 		},
 	}))
 

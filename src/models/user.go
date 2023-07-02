@@ -36,3 +36,9 @@ type UserChangePassword struct {
 func (u User) GetBase() *UserBase {
 	return &u.UserBase
 }
+
+func (ub UserBase) GetUser() *User {
+	return &User{
+		UserBase: ub,
+	}
+}

@@ -10,4 +10,5 @@ func (r handler) addRoot(rg *gin.RouterGroup) {
 
 	rg.GET("/stats", rc.GetStats())
 	rg.GET("/ping", rc.Ping())
+	rg.GET("/csrf", rc.GetToken())
 }

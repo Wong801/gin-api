@@ -7,7 +7,6 @@ import (
 	model "github.com/Wong801/gin-api/src/models"
 	service "github.com/Wong801/gin-api/src/services"
 	"github.com/gin-gonic/gin"
-	csrf "github.com/utrack/gin-csrf"
 )
 
 type UserController struct {
@@ -94,9 +93,17 @@ func (uc UserController) Login() gin.HandlerFunc {
 			return
 		}
 		c.SetCookie("jwt", token.Jwt, token.MaxAge, "/", token.Domain, token.Secure, token.HttpOnly)
-		c.SetCookie("X-CSRF-TOKEN", csrf.GetToken(c), token.MaxAge, "/", token.Domain, false, false)
 		c.Set("data", map[string]string{
 			"message": "Login Success",
+		})
+		c.Next()
+	}
+}
+
+func (uc UserController) CheckLogin() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("data", map[string]string{
+			"message": "success",
 		})
 		c.Next()
 	}
@@ -105,7 +112,6 @@ func (uc UserController) Login() gin.HandlerFunc {
 func (uc UserController) Logout() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.SetCookie("jwt", "", -1, "/", "", true, true)
-		c.SetCookie("X-CSRF-TOKEN", "", -1, "/", "", false, false)
 		c.Next()
 	}
 }

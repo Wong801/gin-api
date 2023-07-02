@@ -74,19 +74,16 @@ func (us UserService) GetUser() (int, *model.UserBase, error) {
 		return http.StatusNotFound, nil, err
 	}
 
-	return http.StatusFound, user.GetBase(), nil
+	return http.StatusOK, user.GetBase(), nil
 }
 
 func (us UserService) UpdateUser(id int, u *model.UserBase) (int, *model.UserBase, error) {
-	var user model.User
 	db.Open(us.DB)
 
-	us.DB.Database.Where("id = ?", id)
-
-	if err := us.DB.Database.Save(&user).Error; err != nil {
-		return http.StatusInternalServerError, nil, err
+	if err := us.DB.Database.Save(u.GetUser()).Error; err != nil {
+		return http.StatusBadRequest, nil, err
 	}
-	return http.StatusOK, user.GetBase(), nil
+	return http.StatusOK, u.GetUser().GetBase(), nil
 }
 
 func (us UserService) Register(u *model.User) (int, error) {
@@ -109,7 +106,7 @@ func (us UserService) Login(u *model.UserLogin) (int, *entity.Token, error) {
 	db.Open(us.DB)
 
 	if err := us.DB.Database.First(&user, "email = ? OR username = ?", u.Email, u.Username).Error; err != nil {
-		return http.StatusNotFound, nil, errors.New("user not found")
+		return http.StatusBadRequest, nil, errors.New("incorrect username or password")
 	}
 
 	correctPassword := checkPasswordHash(u.Password, user.Password)
