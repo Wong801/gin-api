@@ -53,4 +53,5 @@ func (h Adapter) Close() error {
 func (h Adapter) MigrateModels() {
 	h.Database.AutoMigrate(&model.User{})
 	h.Database.AutoMigrate(&model.Company{})
+	h.Database.AutoMigrate(&model.Skill{})
 }

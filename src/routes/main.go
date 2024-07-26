@@ -44,6 +44,7 @@ func InitRoutes() handler {
 	r.addRoot(root)
 	r.addUsers(v1)
 	r.addCompanies(v1)
+	r.addSkills(v1)
 
 	return r
 }

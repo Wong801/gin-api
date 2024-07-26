@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 
 	entity "github.com/Wong801/gin-api/src/entities"
@@ -21,10 +22,10 @@ func getSuccessStatus(status any) int {
 	return http.StatusOK
 }
 
-func getErrorMessage(c *gin.Context) any {
+func getErrorMessage(c *gin.Context) interface{} {
 	err := c.Errors.Last()
 	if err != nil {
-		return entity.ResultError{Reason: c.Error(err).Error()}
+		return &entity.ResultError{Reason: c.Error(err).Error()}
 	}
 	customError, _ := c.Get("error")
 	return customError
@@ -42,6 +43,7 @@ func (m middleware) Response() gin.HandlerFunc {
 			})
 			return
 		}
+		fmt.Println(c.MustGet("data"))
 		c.JSON(getSuccessStatus(status), &entity.HttpResponse{
 			Success: true,
 			Data:    c.MustGet("data"),

@@ -1,7 +1,7 @@
 package model
 
 type Company struct {
-	Id       int    `json:"id" form:"id" gorm:"primaryKey"`
+	ID       int    `json:"id" form:"id" gorm:"primaryKey"`
 	Name     string `json:"name" form:"name" binding:"required"`
 	Logo     string `json:"logo" form:"logo"`
 	Link     string `json:"link" form:"link" binding:"omitempty"`
