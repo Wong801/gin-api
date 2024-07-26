@@ -3,9 +3,13 @@ package route
 import (
 	"net/http"
 
+	"github.com/Wong801/gin-api/src/config"
 	entity "github.com/Wong801/gin-api/src/entities"
 	middleware "github.com/Wong801/gin-api/src/middlewares"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
+	csrf "github.com/utrack/gin-csrf"
 )
 
 type handler struct {
@@ -16,6 +20,20 @@ func InitRoutes() handler {
 	r := handler{
 		router: gin.New(),
 	}
+
+	store := cookie.NewStore([]byte(config.GetEnv("JWT_SECRET", "secret")))
+	r.router.Use(sessions.Sessions("session", store))
+
+	r.router.Use(csrf.Middleware(csrf.Options{
+		Secret: config.GetEnv("CSRF_SECRET", "secret"),
+		ErrorFunc: func(c *gin.Context) {
+			c.AbortWithStatusJSON(http.StatusBadRequest, &entity.HttpResponse{
+				Success: false,
+				Data:    "CSRF token mismatch",
+			})
+		},
+	}))
+
 	m := middleware.InitMiddleware()
 
 	r.router.StaticFS("/public", gin.Dir("public", false))
@@ -23,7 +41,6 @@ func InitRoutes() handler {
 
 	root := r.router.Group("/")
 	v1 := r.router.Group("/api/v1")
-
 	r.addRoot(root)
 	r.addUsers(v1)
 	r.addCompanies(v1)
